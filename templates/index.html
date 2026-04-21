@@ -12,9 +12,19 @@
         <h1>Residential Data Operations Portal</h1>
         <p class="subtitle">Stored Procedures & Table Access</p>
 
+        <p class="welcome-text">
+            Welcome, <strong>{{ username }}</strong>
+            {% if is_admin %}
+                (Admin)
+            {% else %}
+                (User)
+            {% endif %}
+        </p>
+
         <div class="split-layout">
 
-            <!-- LEFT PANEL -->
+            <!-- LEFT PANEL : ADMIN ONLY -->
+            {% if is_admin %}
             <div class="panel">
                 <h3>Run Stored Procedure</h3>
 
@@ -26,8 +36,9 @@
 
                 <button class="primary" onclick="runSP()">Run</button>
             </div>
+            {% endif %}
 
-            <!-- RIGHT PANEL -->
+            <!-- RIGHT PANEL : ALL USERS -->
             <div class="panel">
                 <h3>Table Access</h3>
 
@@ -57,6 +68,7 @@
                     <button class="danger" onclick="stopRunning()">Stop</button>
                 </div>
             </div>
+
         </div>
 
         <!-- LOADER -->
