@@ -40,6 +40,7 @@ last_preview_data = []
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
+        session.clear()  # ADD THIS LINE
         if request.method == "POST":
             username = request.form.get("username", "").strip().upper()
             password = request.form.get("password", "").strip()
