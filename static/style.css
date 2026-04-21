@@ -1,0 +1,145 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.ocean-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f4c75, #3282b8, #bbe1fa);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.main-card {
+    width: 85%;
+    max-width: 1200px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 40px;
+    color: white;
+}
+
+.split-layout {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.panel {
+    flex: 1;
+    background: rgba(255,255,255,0.15);
+    padding: 25px;
+    border-radius: 18px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.primary {
+    background: white;
+    color: #0f4c75;
+    margin-top: 15px;
+}
+
+.warning {
+    background: #f4c542;
+    color: black;
+}
+
+.danger {
+    background: #d9534f;
+    color: white;
+}
+
+.secondary {
+    background: #1b262c;
+    color: white;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid white;
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    margin: 20px auto;
+    animation: spin 1s linear infinite;
+}
+
+.hidden {
+    display: none;
+}
+
+.message {
+    text-align: center;
+    margin: 20px 0;
+    font-weight: bold;
+}
+
+.success {
+    color: #90ee90;
+}
+
+.error {
+    color: #ff7b7b;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    color: black;
+    margin-top: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background: #0f4c75;
+    color: white;
+}
+
+.bottom-actions {
+    text-align: center;
+    margin-top: 25px;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
