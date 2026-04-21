@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="ocean-bg">
+
+<div class="dashboard-container">
+    <div class="main-card">
+
+        <h1>Residential Data Operations Portal</h1>
+        <p class="subtitle">Stored Procedures & Table Access</p>
+
+        <div class="split-layout">
+
+            <!-- LEFT PANEL -->
+            <div class="panel">
+                <h3>Run Stored Procedure</h3>
+
+                <select id="spSelect">
+                    {% for sp in sps %}
+                        <option value="{{ sp }}">{{ sp }}</option>
+                    {% endfor %}
+                </select>
+
+                <button class="primary" onclick="runSP()">Run</button>
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <div class="panel">
+                <h3>Table Access</h3>
+
+                <select id="tableSelect">
+                    {% for t in tables %}
+                        <option value="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </select>
+
+                <input type="text" id="cadAccountNumber"
+                       placeholder="CAD Account Number (comma/new line supported)">
+
+                <input type="text" id="propAddress"
+                       placeholder="Property Address">
+
+                <input type="text" id="parcelId"
+                       placeholder="Parcel ID">
+
+                <input type="text" id="cadId"
+                       placeholder="CAD ID">
+
+                <div class="actions">
+                    <button onclick="previewTaxRoll()">Preview</button>
+                    <button onclick="downloadExcel()">Excel</button>
+                    <button onclick="downloadCSV()">CSV</button>
+                    <button class="warning" onclick="resetFields()">Reset</button>
+                    <button class="danger" onclick="stopRunning()">Stop</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOADER -->
+        <div id="loader" class="loader hidden"></div>
+
+        <!-- MESSAGE -->
+        <div id="msg" class="message"></div>
+
+        <!-- PREVIEW OUTPUT -->
+        <h3>Preview Output</h3>
+        <div id="grid"></div>
+
+        <!-- RUN LOG HISTORY -->
+        <h3>Run Log History</h3>
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+
+        <div class="bottom-actions">
+            <a href="/logout">
+                <button class="secondary">Logout</button>
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
