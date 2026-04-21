@@ -15,7 +15,13 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
 
-APP_USER = os.getenv("APP_USER", "admin")
+# ================= ADMIN USERS =================
+ADMIN_USERS = [
+    "KARTHIK P",
+    "RADHIKA J"
+]
+
+# Optional fallback login password
 APP_PASS = os.getenv("APP_PASS", "admin")
 
 ALLOWED_SPS = {
@@ -35,17 +41,19 @@ last_preview_data = []
 def login():
     try:
         if request.method == "POST":
-            username = request.form.get("username")
-            password = request.form.get("password")
+            username = request.form.get("username", "").strip().upper()
+            password = request.form.get("password", "").strip()
 
-            if username == APP_USER and password == APP_PASS:
-                session["user"] = username
-                return redirect(url_for("dashboard"))
+            if password != APP_PASS:
+                return render_template(
+                    "login.html",
+                    error="Invalid password"
+                )
 
-            return render_template(
-                "login.html",
-                error="Invalid credentials"
-            )
+            session["user"] = username
+            session["is_admin"] = username in ADMIN_USERS
+
+            return redirect(url_for("dashboard"))
 
         return render_template("login.html")
 
@@ -71,7 +79,9 @@ def dashboard():
             "index.html",
             sps=list(ALLOWED_SPS),
             tables=["TaxRoll_2026"],
-            history=run_history
+            history=run_history,
+            username=session.get("user"),
+            is_admin=session.get("is_admin", False)
         )
 
     except Exception as e:
@@ -82,12 +92,24 @@ def dashboard():
 @app.route("/run_sp", methods=["POST"])
 def run_sp():
     if "user" not in session:
-        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+        return jsonify({
+            "status": "error",
+            "message": "Unauthorized"
+        }), 401
+
+    if not session.get("is_admin", False):
+        return jsonify({
+            "status": "error",
+            "message": "Access Denied - Admins Only"
+        }), 403
 
     sp_name = request.form.get("sp_name")
 
     if sp_name not in ALLOWED_SPS:
-        return jsonify({"status": "error", "message": "Invalid SP"}), 400
+        return jsonify({
+            "status": "error",
+            "message": "Invalid SP"
+        }), 400
 
     conn = None
 
@@ -102,7 +124,8 @@ def run_sp():
             "action": "Stored Procedure",
             "source": sp_name,
             "status": "Success",
-            "time": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            "time": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            "user": session.get("user")
         })
 
         return jsonify({
@@ -115,7 +138,8 @@ def run_sp():
             "action": "Stored Procedure",
             "source": sp_name,
             "status": "Failed",
-            "time": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            "time": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            "user": session.get("user")
         })
 
         return jsonify({
