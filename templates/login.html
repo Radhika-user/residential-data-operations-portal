@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="ocean-bg">
+
+<div class="center-wrapper">
+    <div class="login-card">
+        <h1>Residential Data Operations Portal</h1>
+        <p>Please login</p>
+
+        {% if error %}
+            <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+
+            <input type="password" name="password" placeholder="Password" required>
+
+            <button class="primary" type="submit">Login</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
