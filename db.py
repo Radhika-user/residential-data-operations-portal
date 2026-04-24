@@ -1,13 +1,29 @@
 import pyodbc
 
-
 def base_conn(db):
-    return pyodbc.connect(
-        f"DRIVER={{ODBC Driver 13 for SQL Server}};"
-        f"SERVER=fileprepdb;"
-        f"DATABASE={db};"
-        f"Trusted_Connection=yes;"
-    )
+    drivers = [
+        "ODBC Driver 18 for SQL Server",
+        "ODBC Driver 17 for SQL Server",
+        "ODBC Driver 13 for SQL Server"
+    ]
+
+    last_error = None
+
+    for driver in drivers:
+        try:
+            conn_str = (
+                f"DRIVER={{{driver}}};"
+                f"SERVER=fileprepdb;"
+                f"DATABASE={db};"
+                f"Trusted_Connection=yes;"
+                f"TrustServerCertificate=yes;"
+            )
+            return pyodbc.connect(conn_str)
+        except Exception as e:
+            last_error = e
+            print(f"{driver} failed: {e}")
+
+    raise Exception(f"All ODBC drivers failed: {last_error}")
 
 
 def get_csdb_connection():
