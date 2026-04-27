@@ -34,20 +34,24 @@ run_history = []
 last_preview_data = []
 
 # ================= LOGIN =================
+# ================= LOGIN =================
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        display_user = getpass.getuser()
+        display_user = ""
+
+        if platform.system() == "Windows":
+            display_user = getpass.getuser()
 
         if request.method == "POST":
 
             # Render / Linux / Non-Windows
             if platform.system() != "Windows":
                 session.clear()
-                session["user"] = display_user.lower()
-                session["windows_user"] = display_user
-                session["is_admin"] = display_user.upper() in ADMIN_USERS
+                session["user"] = "render"
+                session["windows_user"] = "render"
+                session["is_admin"] = False
 
                 return redirect(url_for("dashboard"))
 
@@ -78,9 +82,8 @@ def login():
         return render_template(
             "login.html",
             error=str(e),
-            username=getpass.getuser()
+            username=""
         )
-
 # ================= LOGOUT =================
 @app.route("/logout")
 def logout():
