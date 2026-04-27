@@ -41,7 +41,7 @@ import os
 def login():
     try:
         # Get current system username for display
-        display_user = os.getenv("USERNAME", "Windows User")
+        display_user = os.getenv("USERNAME") or os.getenv("USER") or "Radhika"
 
         if request.method == "POST":
             conn = get_csdb_connection()
