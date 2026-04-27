@@ -10,7 +10,11 @@
     <div class="login-card">
         <h1>🛡️ Windows Secure Login</h1>
 
-        <form method="POST">
+        {% if error %}
+            <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login">
             <label>Username</label>
             <input type="text" value="{{ username }}" readonly>
 
