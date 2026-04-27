@@ -36,14 +36,27 @@ last_preview_data = []
 
 import os
 
+import os
+import platform
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        # Get current system username for display
-        display_user = os.getenv("USERNAME") or os.getenv("USER")
+        display_user = os.getenv("USERNAME") or os.getenv("USER") or "Office User"
 
         if request.method == "POST":
+
+            # Render / Linux → allow direct login
+            if platform.system() != "Windows":
+                session.clear()
+                session["user"] = display_user.lower()
+                session["windows_user"] = display_user
+                session["is_admin"] = display_user.upper() in ADMIN_USERS
+
+                return redirect(url_for("dashboard"))
+
+            # Local Windows → use SQL validation
             conn = get_csdb_connection()
             cursor = conn.cursor()
 
@@ -67,7 +80,8 @@ def login():
         return render_template(
             "login.html",
             error=str(e),
-            username=os.getenv("USERNAME", "Windows User")
+            username=display_user
+        )
         )
 
 # ================= LOGOUT =================
