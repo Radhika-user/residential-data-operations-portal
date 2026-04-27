@@ -34,38 +34,41 @@ ALLOWED_SPS = {
 run_history = []
 last_preview_data = []
 
-# ================= LOGIN =================
-@app.route("/")# ================= LOGIN =================
+import os
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        # Get Windows logged-in user
-        conn = get_csdb_connection()
-        cursor = conn.cursor()
+        # Get current system username for display
+        display_user = os.getenv("USERNAME", "Windows User")
 
-        cursor.execute("SELECT SYSTEM_USER")
-        windows_user = cursor.fetchone()[0]
-
-        username = windows_user.split("\\")[-1].lower()
-
-        conn.close()
-
-        # On button click -> login
         if request.method == "POST":
+            conn = get_csdb_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT SYSTEM_USER")
+            windows_user = cursor.fetchone()[0]
+
+            username = windows_user.split("\\")[-1].lower()
+
             session.clear()
             session["user"] = username
             session["windows_user"] = windows_user
             session["is_admin"] = username.upper() in ADMIN_USERS
 
+            conn.close()
+
             return redirect(url_for("dashboard"))
 
-        # Show login page with auto-filled username
-        return render_template("login.html", username=username)
+        return render_template("login.html", username=display_user)
 
     except Exception as e:
-        return f"Windows Login Error: {str(e)}"
-
+        return render_template(
+            "login.html",
+            error=str(e),
+            username=os.getenv("USERNAME", "Windows User")
+        )
 
 # ================= LOGOUT =================
 @app.route("/logout")
