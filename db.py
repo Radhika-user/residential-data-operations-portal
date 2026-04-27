@@ -1,40 +1,39 @@
 import pyodbc
+import os
+import platform
 
 def base_conn(db):
-    drivers = [
-        "ODBC Driver 18 for SQL Server",
-        "ODBC Driver 17 for SQL Server",
-        "ODBC Driver 13 for SQL Server"
-    ]
+    server = os.getenv("DB_SERVER", "fileprepdb")
 
-    server = "fileprepdb"
-    last_error = None
+    # LOCAL WINDOWS
+    if platform.system() == "Windows":
+        drivers = [
+            "ODBC Driver 18 for SQL Server",
+            "ODBC Driver 17 for SQL Server",
+            "ODBC Driver 13 for SQL Server"
+        ]
 
-    for driver in drivers:
-        try:
-            conn_str = (
-                f"DRIVER={{{driver}}};"
-                f"SERVER={server};"
-                f"DATABASE={db};"
-                "Trusted_Connection=yes;"
-                "TrustServerCertificate=yes;"
-            )
+        for driver in drivers:
+            try:
+                conn_str = (
+                    f"DRIVER={{{driver}}};"
+                    f"SERVER={server};"
+                    f"DATABASE={db};"
+                    "Trusted_Connection=yes;"
+                    "TrustServerCertificate=yes;"
+                )
+                return pyodbc.connect(conn_str)
+            except:
+                continue
 
-            print(f"Trying {driver}...")
-            conn = pyodbc.connect(conn_str)
-            print(f"Connected using {driver}")
-            return conn
+    # RENDER / ONLINE
+    conn_str = (
+        "DRIVER={ODBC Driver 18 for SQL Server};"
+        f"SERVER={server};"
+        f"DATABASE={db};"
+        f"UID={os.getenv('DB_USER')};"
+        f"PWD={os.getenv('DB_PASSWORD')};"
+        "TrustServerCertificate=yes;"
+    )
 
-        except Exception as e:
-            print(f"{driver} failed: {e}")
-            last_error = e
-
-    raise Exception(f"No working ODBC driver found: {last_error}")
-
-
-def get_csdb_connection():
-    return base_conn("CSDB")
-
-
-def get_taxroll_connection():
-    return base_conn("CSDBTaxroll")
+    return pyodbc.connect(conn_str)
