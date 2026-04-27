@@ -34,28 +34,27 @@ run_history = []
 last_preview_data = []
 
 # ================= LOGIN =================
-# ================= LOGIN =================
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        display_user = ""
-
         if platform.system() == "Windows":
             display_user = getpass.getuser()
+        else:
+            display_user = "Office Login"
 
         if request.method == "POST":
 
-            # Render / Linux / Non-Windows
+            # Render / Linux
             if platform.system() != "Windows":
                 session.clear()
                 session["user"] = "officeuser"
-                session["windows_user"] = ""
+                session["windows_user"] = display_user
                 session["is_admin"] = False
 
                 return redirect("/dashboard")
 
-            # Local Windows → SQL validation
+            # Local Windows
             conn = get_csdb_connection()
             cursor = conn.cursor()
 
@@ -71,7 +70,7 @@ def login():
 
             conn.close()
 
-            return redirect(url_for("dashboard"))
+            return redirect("/dashboard")
 
         return render_template(
             "login.html",
