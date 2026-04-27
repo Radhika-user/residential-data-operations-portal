@@ -49,11 +49,11 @@ def login():
             # Render / Linux / Non-Windows
             if platform.system() != "Windows":
                 session.clear()
-                session["user"] = "render"
-                session["windows_user"] = "render"
+                session["user"] = "officeuser"
+                session["windows_user"] = ""
                 session["is_admin"] = False
 
-                return redirect(url_for("dashboard"))
+                return redirect("/dashboard")
 
             # Local Windows → SQL validation
             conn = get_csdb_connection()
