@@ -38,23 +38,13 @@ last_preview_data = []
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        display_user = getpass.getuser()
+        display_user = ""
 
         if request.method == "POST":
-            conn = get_csdb_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT SYSTEM_USER")
-            windows_user = cursor.fetchone()[0]
-
-            username = windows_user.split("\\")[-1].lower()
-
             session.clear()
-            session["user"] = username
-            session["windows_user"] = windows_user
-            session["is_admin"] = username.upper() in ADMIN_USERS
-
-            conn.close()
+            session["user"] = ""
+            session["windows_user"] = ""
+            session["is_admin"] = False
 
             return redirect("/dashboard")
 
