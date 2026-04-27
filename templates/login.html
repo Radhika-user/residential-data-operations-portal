@@ -1,29 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Login</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body class="ocean-bg">
+@app.route("/")
+@app.route("/login")
+def login():
+    try:
+        session.clear()
 
-<div class="center-wrapper">
-    <div class="login-card">
-        <h1>Residential Data Operations Portal</h1>
-        <p>Please login</p>
+        conn = get_csdb_connection()
+        cursor = conn.cursor()
 
-        {% if error %}
-            <div class="message error">{{ error }}</div>
-        {% endif %}
+        cursor.execute("SELECT SYSTEM_USER")
+        windows_user = cursor.fetchone()[0]
 
-        <form method="POST">
-            <input type="text" name="username" placeholder="Username" required>
+        # Take only username after slash
+        username = windows_user.split("\\")[-1].upper()
 
-            <input type="password" name="password" placeholder="Password" required>
+        session["user"] = username
+        session["windows_user"] = windows_user
+        session["is_admin"] = username in ADMIN_USERS
 
-            <button class="primary" type="submit">Login</button>
-        </form>
-    </div>
-</div>
+        conn.close()
 
-</body>
-</html>
+        return redirect(url_for("dashboard"))
+
+    except Exception as e:
+        return f"Windows Login Error: {str(e)}"
