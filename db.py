@@ -1,40 +1,34 @@
-import os
-import platform
 import pyodbc
-import pymssql
-
+import os
 
 def base_conn(db):
     server = os.getenv("DB_SERVER", "fileprepdb")
 
-    # LOCAL WINDOWS
-    if platform.system() == "Windows":
-        drivers = [
-            "ODBC Driver 18 for SQL Server",
-            "ODBC Driver 17 for SQL Server",
-            "ODBC Driver 13 for SQL Server"
-        ]
+    drivers = [
+        "ODBC Driver 18 for SQL Server",
+        "ODBC Driver 17 for SQL Server",
+        "ODBC Driver 13 for SQL Server"
+    ]
 
-        for driver in drivers:
-            try:
-                conn_str = (
-                    f"DRIVER={{{driver}}};"
-                    f"SERVER={server};"
-                    f"DATABASE={db};"
-                    "Trusted_Connection=yes;"
-                    "TrustServerCertificate=yes;"
-                )
-                return pyodbc.connect(conn_str)
-            except:
-                continue
+    last_error = None
 
-    # RENDER / LINUX
-    return pymssql.connect(
-        server=server,
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=db
-    )
+    for driver in drivers:
+        try:
+            conn = pyodbc.connect(
+                "DRIVER={" + driver + "};"
+                f"SERVER={server};"
+                f"DATABASE={db};"
+                "Trusted_Connection=yes;"
+                "TrustServerCertificate=yes;"
+            )
+            print(f"Connected using {driver}")
+            return conn
+
+        except Exception as e:
+            last_error = e
+            print(f"{driver} failed: {e}")
+
+    raise Exception(f"No ODBC driver worked. Last error: {last_error}")
 
 
 def get_csdb_connection():
