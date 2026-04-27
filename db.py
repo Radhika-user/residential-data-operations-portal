@@ -1,10 +1,6 @@
 import pyodbc
-import platform
 
 def base_conn(db):
-    if platform.system() != "Windows":
-        raise Exception("Windows Authentication works only on Windows machines")
-
     conn_str = (
         "DRIVER={ODBC Driver 18 for SQL Server};"
         "SERVER=fileprepdb;"
@@ -12,7 +8,6 @@ def base_conn(db):
         "Trusted_Connection=yes;"
         "TrustServerCertificate=yes;"
     )
-
     return pyodbc.connect(conn_str)
 
 
