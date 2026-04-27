@@ -7,6 +7,8 @@ from db import get_csdb_connection, get_taxroll_connection
 import pandas as pd
 import io
 import os
+import getpass
+import platform
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -21,9 +23,6 @@ ADMIN_USERS = [
     "KARTHIK.PADMANABAN"
 ]
 
-# Optional fallback login password
-APP_PASS = os.getenv("APP_PASS", "admin")
-
 ALLOWED_SPS = {
     "EXEC dbo.sp_UpdateResidentialData_CAD;",
     "Exec Send_CommercialSales_Core_Report;",
@@ -34,20 +33,16 @@ ALLOWED_SPS = {
 run_history = []
 last_preview_data = []
 
-import os
-
-import os
-import platform
-
+# ================= LOGIN =================
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        display_user = os.getenv("USERNAME") or os.getenv("USER") or "Office User"
+        display_user = getpass.getuser()
 
         if request.method == "POST":
 
-            # Render / Linux → allow direct login
+            # Render / Linux / Non-Windows
             if platform.system() != "Windows":
                 session.clear()
                 session["user"] = display_user.lower()
@@ -56,7 +51,7 @@ def login():
 
                 return redirect(url_for("dashboard"))
 
-            # Local Windows → use SQL validation
+            # Local Windows → SQL validation
             conn = get_csdb_connection()
             cursor = conn.cursor()
 
@@ -74,14 +69,16 @@ def login():
 
             return redirect(url_for("dashboard"))
 
-        return render_template("login.html", username=display_user)
+        return render_template(
+            "login.html",
+            username=display_user
+        )
 
     except Exception as e:
         return render_template(
             "login.html",
             error=str(e),
-            username=display_user
-        )
+            username=getpass.getuser()
         )
 
 # ================= LOGOUT =================
@@ -90,12 +87,11 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-
 # ================= DASHBOARD =================
 @app.route("/dashboard")
 def dashboard():
     try:
-        if "user" not in session:
+        if not session.get("user"):
             return redirect(url_for("login"))
 
         return render_template(
@@ -103,13 +99,15 @@ def dashboard():
             sps=list(ALLOWED_SPS),
             tables=["TaxRoll_2026"],
             history=run_history,
-            username=session.get("user"),
+            username=session.get(
+                "windows_user",
+                session.get("user")
+            ),
             is_admin=session.get("is_admin", False)
         )
 
     except Exception as e:
         return f"Dashboard Error: {str(e)}"
-
 
 # ================= RUN SP =================
 @app.route("/run_sp", methods=["POST"])
@@ -174,14 +172,16 @@ def run_sp():
         if conn:
             conn.close()
 
-
 # ================= PREVIEW TAXROLL =================
 @app.route("/preview_taxroll", methods=["POST"])
 def preview_taxroll():
     global last_preview_data
 
     if "user" not in session:
-        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+        return jsonify({
+            "status": "error",
+            "message": "Unauthorized"
+        }), 401
 
     cad_account = request.form.get("cad_account", "").strip()
     prop_address = request.form.get("prop_address", "").strip()
@@ -206,7 +206,6 @@ def preview_taxroll():
 
         params = []
 
-        # MULTIPLE ACCOUNT NUMBERS
         if cad_account:
             accounts = [
                 x.strip()
@@ -220,7 +219,6 @@ def preview_taxroll():
             """
             params.extend(accounts)
 
-        # MULTIPLE ADDRESSES
         if prop_address:
             addresses = [
                 x.strip()
@@ -237,7 +235,6 @@ def preview_taxroll():
                 AND ({' OR '.join(conditions)})
             """
 
-        # MULTIPLE PARCEL IDS
         if parcel_id:
             parcels = [
                 x.strip()
@@ -251,7 +248,6 @@ def preview_taxroll():
             """
             params.extend(parcels)
 
-        # MULTIPLE CAD IDS
         if cad_id:
             cad_ids = [
                 x.strip()
@@ -277,13 +273,6 @@ def preview_taxroll():
 
         last_preview_data = data
 
-        run_history.append({
-            "action": "Preview",
-            "source": "TaxRoll_2026",
-            "status": "Success",
-            "time": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        })
-
         return jsonify({
             "status": "success",
             "columns": columns,
@@ -291,13 +280,6 @@ def preview_taxroll():
         })
 
     except Exception as e:
-        run_history.append({
-            "action": "Preview",
-            "source": "TaxRoll_2026",
-            "status": "Failed",
-            "time": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        })
-
         return jsonify({
             "status": "error",
             "message": str(e)
@@ -307,72 +289,60 @@ def preview_taxroll():
         if conn:
             conn.close()
 
-
 # ================= EXCEL DOWNLOAD =================
 @app.route("/download_excel")
 def download_excel():
     global last_preview_data
 
-    try:
-        if not last_preview_data:
-            return jsonify({
-                "status": "error",
-                "message": "No data available"
-            })
+    if not last_preview_data:
+        return jsonify({
+            "status": "error",
+            "message": "No data available"
+        })
 
-        df = pd.DataFrame(last_preview_data)
+    df = pd.DataFrame(last_preview_data)
 
-        output = io.BytesIO()
+    output = io.BytesIO()
 
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df.to_excel(writer, index=False, sheet_name="TaxRoll")
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="TaxRoll")
 
-        output.seek(0)
+    output.seek(0)
 
-        return send_file(
-            output,
-            as_attachment=True,
-            download_name="TaxRoll_Output.xlsx",
-            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-    except Exception as e:
-        return f"Excel Download Error: {str(e)}"
-
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="TaxRoll_Output.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 # ================= CSV DOWNLOAD =================
 @app.route("/download_csv")
 def download_csv():
     global last_preview_data
 
-    try:
-        if not last_preview_data:
-            return jsonify({
-                "status": "error",
-                "message": "No data available"
-            })
+    if not last_preview_data:
+        return jsonify({
+            "status": "error",
+            "message": "No data available"
+        })
 
-        df = pd.DataFrame(last_preview_data)
+    df = pd.DataFrame(last_preview_data)
 
-        output = io.StringIO()
-        df.to_csv(output, index=False)
+    output = io.StringIO()
+    df.to_csv(output, index=False)
 
-        return send_file(
-            io.BytesIO(output.getvalue().encode()),
-            as_attachment=True,
-            download_name="TaxRoll_Output.csv",
-            mimetype="text/csv"
-        )
-
-    except Exception as e:
-        return f"CSV Download Error: {str(e)}"
-
+    return send_file(
+        io.BytesIO(output.getvalue().encode()),
+        as_attachment=True,
+        download_name="TaxRoll_Output.csv",
+        mimetype="text/csv"
+    )
 
 # ================= HISTORY =================
 @app.route("/history")
 def history():
     return jsonify(run_history)
-
 
 # ================= MAIN =================
 if __name__ == "__main__":
