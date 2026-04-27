@@ -17,8 +17,8 @@ app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
 
 # ================= ADMIN USERS =================
 ADMIN_USERS = [
-    "KARTHIK P",
-    "RADHIKA J"
+    "RADHIKAJ",
+    "KARTHIK.PADMANABAN"
 ]
 
 # Optional fallback login password
@@ -34,39 +34,42 @@ ALLOWED_SPS = {
 run_history = []
 last_preview_data = []
 
-
 # ================= LOGIN =================
-@app.route("/", methods=["GET", "POST"])
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/")
+@app.route("/login")
 def login():
     try:
-        session.clear()  # ADD THIS LINE
-        if request.method == "POST":
-            username = request.form.get("username", "").strip().upper()
-            password = request.form.get("password", "").strip()
+        session.clear()
 
-            if password != APP_PASS:
-                return render_template(
-                    "login.html",
-                    error="Invalid password"
-                )
+        conn = get_csdb_connection()
+        cursor = conn.cursor()
 
-            session["user"] = username
-            session["is_admin"] = username in ADMIN_USERS
+        cursor.execute("SELECT SYSTEM_USER")
+        windows_user = cursor.fetchone()[0]
 
-            return redirect(url_for("dashboard"))
+        # Get only username part after domain slash
+        username = windows_user.split("\\")[-1].upper()
 
-        return render_template("login.html")
+        session["user"] = username
+        session["windows_user"] = windows_user
+        session["is_admin"] = username in ADMIN_USERS
+
+        conn.close()
+
+        return redirect(url_for("dashboard"))
 
     except Exception as e:
-        return f"Login Error: {str(e)}"
+        return f"Windows Login Error: {str(e)}"
 
 
 # ================= LOGOUT =================
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("logged_out"))
+@app.route("/logged_out")
+def logged_out():
+    return render_template("logged_out.html")
 
 
 # ================= DASHBOARD =================
@@ -354,4 +357,4 @@ def history():
 
 # ================= MAIN =================
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
