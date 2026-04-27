@@ -38,23 +38,9 @@ last_preview_data = []
 @app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        if platform.system() == "Windows":
-            display_user = getpass.getuser()
-        else:
-            display_user = "Office Login"
+        display_user = getpass.getuser()
 
         if request.method == "POST":
-
-            # Render / Linux
-            if platform.system() != "Windows":
-                session.clear()
-                session["user"] = "officeuser"
-                session["windows_user"] = display_user
-                session["is_admin"] = False
-
-                return redirect("/dashboard")
-
-            # Local Windows
             conn = get_csdb_connection()
             cursor = conn.cursor()
 
