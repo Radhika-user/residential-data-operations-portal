@@ -2,16 +2,19 @@ import pyodbc
 import os
 import platform
 
+
 def base_conn(db):
     server = os.getenv("DB_SERVER", "fileprepdb")
 
-    # LOCAL WINDOWS
+    # Local Windows machine
     if platform.system() == "Windows":
         drivers = [
             "ODBC Driver 18 for SQL Server",
             "ODBC Driver 17 for SQL Server",
             "ODBC Driver 13 for SQL Server"
         ]
+
+        last_error = None
 
         for driver in drivers:
             try:
@@ -23,10 +26,13 @@ def base_conn(db):
                     "TrustServerCertificate=yes;"
                 )
                 return pyodbc.connect(conn_str)
-            except:
-                continue
 
-    # RENDER / ONLINE
+            except Exception as e:
+                last_error = e
+
+        raise Exception(f"No working ODBC driver found: {last_error}")
+
+    # Render / Linux SQL Login
     conn_str = (
         "DRIVER={ODBC Driver 18 for SQL Server};"
         f"SERVER={server};"
@@ -37,3 +43,11 @@ def base_conn(db):
     )
 
     return pyodbc.connect(conn_str)
+
+
+def get_csdb_connection():
+    return base_conn("CSDB")
+
+
+def get_taxroll_connection():
+    return base_conn("CSDBTaxroll")
