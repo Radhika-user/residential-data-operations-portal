@@ -35,28 +35,33 @@ run_history = []
 last_preview_data = []
 
 # ================= LOGIN =================
-@app.route("/")
-@app.route("/login")
+@app.route("/")# ================= LOGIN =================
+@app.route("/", methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     try:
-        session.clear()
-
+        # Get Windows logged-in user
         conn = get_csdb_connection()
         cursor = conn.cursor()
 
         cursor.execute("SELECT SYSTEM_USER")
         windows_user = cursor.fetchone()[0]
 
-        # Get only username part after domain slash
-        username = windows_user.split("\\")[-1].upper()
-
-        session["user"] = username
-        session["windows_user"] = windows_user
-        session["is_admin"] = username in ADMIN_USERS
+        username = windows_user.split("\\")[-1].lower()
 
         conn.close()
 
-        return redirect(url_for("dashboard"))
+        # On button click -> login
+        if request.method == "POST":
+            session.clear()
+            session["user"] = username
+            session["windows_user"] = windows_user
+            session["is_admin"] = username.upper() in ADMIN_USERS
+
+            return redirect(url_for("dashboard"))
+
+        # Show login page with auto-filled username
+        return render_template("login.html", username=username)
 
     except Exception as e:
         return f"Windows Login Error: {str(e)}"
@@ -66,10 +71,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("logged_out"))
-@app.route("/logged_out")
-def logged_out():
-    return render_template("logged_out.html")
+    return redirect(url_for("login"))
 
 
 # ================= DASHBOARD =================
