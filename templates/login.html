@@ -1,25 +1,23 @@
-@app.route("/")
-@app.route("/login")
-def login():
-    try:
-        session.clear()
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Windows Secure Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="ocean-bg">
 
-        conn = get_csdb_connection()
-        cursor = conn.cursor()
+<div class="center-wrapper">
+    <div class="login-card">
+        <h1>🛡️ Windows Secure Login</h1>
 
-        cursor.execute("SELECT SYSTEM_USER")
-        windows_user = cursor.fetchone()[0]
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" value="{{ username }}" readonly>
 
-        # Take only username after slash
-        username = windows_user.split("\\")[-1].upper()
+            <button class="primary" type="submit">Login</button>
+        </form>
+    </div>
+</div>
 
-        session["user"] = username
-        session["windows_user"] = windows_user
-        session["is_admin"] = username in ADMIN_USERS
-
-        conn.close()
-
-        return redirect(url_for("dashboard"))
-
-    except Exception as e:
-        return f"Windows Login Error: {str(e)}"
+</body>
+</html>
