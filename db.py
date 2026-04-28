@@ -5,9 +5,7 @@ def base_conn(db):
     server = os.getenv("DB_SERVER", "fileprepdb")
 
     drivers = [
-        "ODBC Driver 18 for SQL Server",
-        "ODBC Driver 17 for SQL Server",
-        "ODBC Driver 13 for SQL Server"
+        "ODBC Driver 18 for SQL Server"
     ]
 
     last_error = None
