@@ -5,7 +5,7 @@ def base_conn(db):
     server = os.getenv("DB_SERVER", "fileprepdb")
 
     conn = pyodbc.connect(
-        "DRIVER={ODBC Driver 18 for SQL Server};"
+        "DRIVER={ODBC Driver 13 for SQL Server};"
         f"SERVER={server};"
         f"DATABASE={db};"
         "Trusted_Connection=yes;"
