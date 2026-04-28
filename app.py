@@ -78,7 +78,7 @@ def dashboard():
             parcel = request.form.get("parcel")
             cadid = request.form.get("cadid")
 
-            query = "SELECT TOP 50 * FROM TaxRoll_2026 WHERE 1=1"
+            query = "SELECT * FROM TaxRoll_2026 WHERE 1=1"
             params = []
 
             if cad:
