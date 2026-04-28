@@ -18,3 +18,4 @@ def get_csdb_connection():
  
 def get_taxroll_connection():
     return base_conn("CSDBTaxroll")
+ Connection Timeout=15;
