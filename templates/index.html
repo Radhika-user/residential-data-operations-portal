@@ -1,109 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <title>Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: linear-gradient(to right, #1e5c84, #6aa0c5);
+            color: white;
+        }
+
+        .wrapper {
+            width: 75%;
+            margin: 60px auto;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+        }
+
+        .flex {
+            display: flex;
+            gap: 40px;
+        }
+
+        .card {
+            flex: 1;
+            padding: 25px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .green {
+            background: linear-gradient(135deg, #7dbb3a, #9fd34f);
+            color: black;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .preview { background: #ffe066; }
+        .reset { background: #f7c948; }
+        .stop { background: #e74c3c; color: white; }
+        .download { background: #4caf50; color: white; }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            background: white;
+            color: black;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .logout {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: black;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+    </style>
 </head>
-<body class="ocean-bg">
 
-<div class="dashboard-container">
-    <div class="main-card">
+<body>
 
-        <h1>Residential Data Operations Portal</h1>
-        <p class="subtitle">Stored Procedures & Table Access</p>
+<div class="wrapper">
 
-        <p class="welcome-text">
-            Welcome, <strong>{{ username }}</strong>
-            {% if is_admin %}
-                (Admin)
-            {% else %}
-                (User)
-            {% endif %}
-        </p>
+    <h1>Residential Data Operations Portal</h1>
+    <p>Stored Procedures & Table Access</p>
 
-        <div class="split-layout">
+    <div class="flex">
 
-            <!-- LEFT PANEL : ADMIN ONLY -->
-            {% if is_admin %}
-            <div class="panel">
-                <h3>Run Stored Procedure</h3>
+        <!-- LEFT -->
+        <div class="card">
+            <h3>Run Stored Procedure</h3>
 
-                <select id="spSelect">
-                    {% for sp in sps %}
-                        <option value="{{ sp }}">{{ sp }}</option>
-                    {% endfor %}
+            <form method="POST">
+                <input type="hidden" name="action" value="run_sp">
+
+                <select name="sp_name">
+                    <option value="sp_UpdateResidentialData_CAD">EXEC dbo.sp_UpdateResidentialData_CAD;</option>
+                    <option value="Send_CommercialSales_Core_Report">EXEC Send_CommercialSales_Core_Report;</option>
+                    <option value="Send_CommercialSales_NonCore_Report">EXEC Send_CommercialSales_NonCore_Report;</option>
+                    <option value="usp_Load_Clickhouse_Sales">EXEC dbo.usp_Load_Clickhouse_Sales;</option>
                 </select>
 
-                <button class="primary" onclick="runSP()">Run</button>
-            </div>
-            {% endif %}
-
-            <!-- RIGHT PANEL : ALL USERS -->
-            <div class="panel">
-                <h3>Table Access</h3>
-
-                <select id="tableSelect">
-                    {% for t in tables %}
-                        <option value="{{ t }}">{{ t }}</option>
-                    {% endfor %}
-                </select>
-
-                <input type="text" id="cadAccountNumber"
-                       placeholder="CAD Account Number (comma/new line supported)">
-
-                <input type="text" id="propAddress"
-                       placeholder="Property Address">
-
-                <input type="text" id="parcelId"
-                       placeholder="Parcel ID">
-
-                <input type="text" id="cadId"
-                       placeholder="CAD ID">
-
-                <div class="actions">
-                    <button onclick="previewTaxRoll()">Preview</button>
-                    <button onclick="downloadExcel()">Excel</button>
-                    <button onclick="downloadCSV()">CSV</button>
-                    <button class="warning" onclick="resetFields()">Reset</button>
-                    <button class="danger" onclick="stopRunning()">Stop</button>
-                </div>
-            </div>
-
+                <button class="btn">Run</button>
+            </form>
         </div>
 
-        <!-- LOADER -->
-        <div id="loader" class="loader hidden"></div>
+        <!-- RIGHT -->
+        <div class="card green">
+            <h3>Table Access</h3>
 
-        <!-- MESSAGE -->
-        <div id="msg" class="message"></div>
+            <form method="POST">
 
-        <!-- PREVIEW OUTPUT -->
-        <h3>Preview Output</h3>
-        <div id="grid"></div>
+                <input type="hidden" name="action" value="preview">
 
-        <!-- RUN LOG HISTORY -->
-        <h3>Run Log History</h3>
-        <table id="historyTable">
-            <thead>
-                <tr>
-                    <th>Action</th>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th>Time</th>
-                </tr>
-            </thead>
-            <tbody id="historyBody"></tbody>
-        </table>
+                <select>
+                    <option>TaxRoll_2026</option>
+                </select>
 
-        <div class="bottom-actions">
-            <a href="/logout">
-                <button class="secondary">Logout</button>
-            </a>
+                <input name="cad" placeholder="CAD Account Number (comma/new line supported)">
+                <input name="address" placeholder="Property Address">
+                <input name="parcel" placeholder="Parcel ID">
+                <input name="cadid" placeholder="CAD ID">
+
+                <button class="btn preview">Preview</button>
+                <button type="reset" class="btn reset">Reset</button>
+                <button type="button" class="btn stop">Stop</button>
+
+                <button type="submit"
+                        formaction="/download_excel"
+                        formmethod="POST"
+                        class="btn download">
+                    Download Excel
+                </button>
+
+            </form>
         </div>
 
     </div>
+
+    <h3>Preview Output</h3>
+
+    {% if results %}
+    <table>
+        <tr>
+            {% for col in columns %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+
+        {% for row in results %}
+        <tr>
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
 </div>
 
-<script src="/static/app.js"></script>
+<a href="/logout" class="logout">Logout</a>
+
 </body>
 </html>
