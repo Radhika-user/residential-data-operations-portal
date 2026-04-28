@@ -1,7 +1,5 @@
-flask
-pyodbc
-python-dotenv
-pandas
-openpyxl
+Flask
 gunicorn
-pymssql
+pyodbc
+pandas
+xlsxwriter
