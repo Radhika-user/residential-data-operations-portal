@@ -10,7 +10,7 @@ def base_conn(db):
         f"DATABASE={db};"
         "Trusted_Connection=yes;"
         "TrustServerCertificate=yes;"
-        "Connection Timeout=10000;"
+        "Connection Timeout=20000;"
     )
     return conn
 
