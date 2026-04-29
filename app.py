@@ -85,19 +85,19 @@ def dashboard():
                 cad_list = [x.strip() for x in cad.replace("\n", ",").split(",") if x.strip()]
                 if cad_list:
                     placeholders = ",".join(["?"] * len(cad_list))
-                    query += f" AND AccountNumber IN ({placeholders})"
+                    query += f" AND txroll_CADAccountNumber IN ({placeholders})"
                     params.extend(cad_list)
 
             if address:
-                query += " AND PropertyAddress LIKE ?"
+                query += " AND txroll_PropAddress LIKE ?"
                 params.append(f"%{address}%")
 
             if parcel:
-                query += " AND ParcelID LIKE ?"
+                query += " AND txroll_ParcelID LIKE ?"
                 params.append(f"%{parcel}%")
 
             if cadid:
-                query += " AND CADID LIKE ?"
+                query += " AND txroll_CadID LIKE ?"
                 params.append(f"%{cadid}%")
 
             cursor.execute(query, params)
@@ -186,5 +186,50 @@ def logout():
     return redirect(url_for("login"))
 
 
+import threading
+import webbrowser
+import time
+import os
+
+from waitress import serve
+import pystray
+from pystray import MenuItem as item
+from PIL import Image, ImageDraw
+
+
+def create_icon():
+    image = Image.new("RGB", (64, 64), "blue")
+    d = ImageDraw.Draw(image)
+    d.rectangle((16, 16, 48, 48), fill="white")
+    return image
+
+
+def open_browser():
+    time.sleep(2)
+    webbrowser.open("http://localhost:5000")
+
+
+def run_server():
+    serve(app, host="0.0.0.0", port=5000)
+
+
+def quit_app(icon, item):
+    icon.stop()
+    os._exit(0)
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    threading.Thread(target=run_server, daemon=True).start()
+    threading.Thread(target=open_browser, daemon=True).start()
+
+    icon = pystray.Icon(
+        "ResidentialPortal",
+        create_icon(),
+        "Residential Portal",
+        menu=pystray.Menu(
+            item("Open Portal", lambda icon, item: webbrowser.open("http://localhost:5000")),
+            item("Exit", quit_app)
+        )
+    )
+
+    icon.run()
